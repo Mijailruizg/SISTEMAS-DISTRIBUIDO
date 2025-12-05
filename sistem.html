@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas Distribuidos - Guía Interactiva</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{
+            --bg1: #0f172a; 
+            --card: #0f172a00;
+            --surface: #ffffff;
+            --muted: #64748b;
+            --primary: #0066ff;
+            --accent: #ff6b6b;
+            --glass: rgba(255,255,255,0.06);
+            --radius: 12px;
+            --shadow: 0 6px 18px rgba(2,6,23,0.35);
+            --glass-2: rgba(255,255,255,0.03);
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg,#0b1220 0%, #10243a 100%);
+            color:#0b1220;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            padding:24px;
+        }
+
+        .app{
+            max-width:1200px;
+            margin:0 auto;
+            display:grid;
+            grid-template-columns: 260px 1fr;
+            gap:24px;
+            align-items:start;
+        }
+
+        header.app-header{
+            grid-column: 1 / -1;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:16px;
+            margin-bottom:8px;
+        }
+
+        .title {
+            color: white;
+        }
+
+        .title h1{font-size:26px;margin:0}
+        .title p{margin:4px 0 0;color: #cbd5e1}
+
+        nav.side {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+            border-radius:var(--radius);
+            padding:12px;
+            position:sticky;
+            top:24px;
+            height:calc(100vh - 48px);
+            overflow:auto;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-list{list-style:none;padding:8px;margin:0}
+        .nav-list li{margin:8px 0}
+
+        .nav-btn{
+            width:100%;
+            display:flex;
+            gap:10px;
+            align-items:center;
+            padding:10px 12px;
+            border-radius:10px;
+            cursor:pointer;
+            border:none;
+            background:transparent;
+            color: #e6eef8;
+            text-align:left;
+            transition:all .18s ease;
+            font-weight:600;
+        }
+
+        .nav-btn .num{
+            min-width:28px;height:28px;border-radius:8px;display:inline-grid;place-items:center;background:#062244;color:#cfe8ff;font-weight:700;font-size:13px;margin-right:6px
+        }
+
+        .nav-btn:hover{transform:translateY(-3px);background:var(--glass)}
+        .nav-btn.active{background:linear-gradient(90deg,#08306b,#0b6fff);box-shadow:0 8px 24px rgba(3,102,255,0.18)}
+
+        main{
+            min-height:60vh;
+        }
+
+        .cards{
+            display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-bottom:18px
+        }
+
+        .card{
+            background:linear-gradient(180deg, #ffffff, #f8fafc);
+            padding:16px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.06);cursor:pointer;display:flex;flex-direction:column;gap:10px
+        }
+
+        .card h3{margin:0;font-size:16px;color:#0b1220}
+        .card p{margin:0;color:var(--muted);font-size:14px}
+
+        .card .open-btn{margin-top:auto;padding:8px 12px;border-radius:999px;background:#0b6fff;color:white;border:none;font-weight:700;cursor:pointer}
+
+        .content {
+            background:white;padding:18px;border-radius:12px;box-shadow:var(--shadow)
+        }
+
+        .section{display:none}
+        .section.active{display:block}
+
+        .section h2{margin-top:0;color:#062244}
+        .badge{display:inline-block;background:#e6f0ff;color:#0b6fff;padding:6px 10px;border-radius:999px;font-weight:700;margin-bottom:8px}
+
+        .info{background:#fbfdff;border-left:4px solid #dbeafe;padding:12px;border-radius:8px}
+
+        @media (max-width:960px){
+            .app{grid-template-columns:1fr;}
+            nav.side{position:relative;height:auto}
+        }
+
+        .nav-btn:focus,.open-btn:focus{outline:3px solid rgba(11,111,255,0.18);outline-offset:2px}
+        .home-btn{margin-left:8px;padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));color:#e6f0ff;cursor:pointer;font-weight:700;transition:transform .14s ease,background .14s ease,box-shadow .14s ease}
+        .home-btn:hover{background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));transform:translateY(-3px);box-shadow:0 8px 24px rgba(3,102,255,0.08)}
+        .home-btn:focus{outline:3px solid rgba(11,111,255,0.14);outline-offset:3px}
+        .splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999}
+        .splash-backdrop{position:absolute;inset:0;background:linear-gradient(180deg,#05060a 0%, #07101a 100%);opacity:1}
+        .splash-content{position:relative;z-index:2;color:white;padding:48px;border-radius:16px;max-width:880px;width:94%;box-shadow:0 26px 80px rgba(2,6,23,0.75);background:linear-gradient(180deg, rgb(3,7,18), rgb(2,5,14));display:flex;flex-direction:column;gap:28px;align-items:center;justify-content:center;backdrop-filter:none;animation:fadeIn 360ms ease-out;border:1px solid rgba(255,255,255,0.03)}
+        .splash-left{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center}
+        .splash-right{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+        .splash h1{font-size:56px;margin:0;color:#e6f0ff}
+        .splash p{margin:0;color:rgba(230,240,255,0.94)}
+        .splash-sub{font-weight:700;letter-spacing:1.2px;font-size:28px}
+        .splash-btn{padding:12px 22px;border-radius:999px;border:none;background:linear-gradient(90deg,#0b6fff,#06b6d4);color:white;font-weight:800;cursor:pointer;box-shadow:0 10px 36px rgba(11,111,255,0.14);transition:transform .18s ease,box-shadow .18s ease,opacity .12s ease}
+        .splash-btn:hover{transform:translateY(-4px);box-shadow:0 20px 50px rgba(11,111,255,0.22)}
+        .splash-btn:active{transform:translateY(-1px);opacity:0.98}
+        .splash-btn:focus{outline:3px solid rgba(11,111,255,0.18);outline-offset:4px}
+        .splash-note{font-size:13px;color:rgba(255,255,255,0.8)}
+        .video-area{margin-top:14px;padding-top:12px;border-top:1px dashed #e6eef8}
+        .video-area h3{margin:8px 0;color:#062244;font-size:16px}
+        .video-placeholder{background:#fbfdff;border:1px solid #e6f0ff;padding:12px;border-radius:8px;color:var(--muted)}
+        .video-input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #dbeafe;margin-top:8px}
+        @media (max-width:720px){
+            .splash-content{flex-direction:column;align-items:center;text-align:center;padding:36px}
+            .splash-left{width:100%}
+            .splash-right{width:100%;align-items:center}
+            .splash-sub{font-size:20px}
+        }
+        @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    </style>
+</head>
+<body>
+    <div class="splash" id="splashScreen">
+        <div class="splash-backdrop" aria-hidden="true"></div>
+        <div class="splash-content" role="dialog" aria-labelledby="splash-title" aria-describedby="splash-desc">
+            <div class="splash-left">
+                <p id="splash-desc" class="splash-sub">INFORMACIÓN DE SISTEMAS DISTRIBUIDOS</p>
+            </div>
+            <div class="splash-right">
+                <button class="splash-btn" onclick="hideSplash()" aria-label="Entrar al sistema">Entrar al Sistema</button>
+            </div>
+        </div>
+    </div>
+    <div class="app">
+        <header class="app-header">
+            <div class="title">
+                <h1>Sistemas Distribuidos</h1>
+            </div>
+                <div style="display:flex;gap:12px;align-items:center">
+                <div style="color:#cbd5e1;font-weight:600">9 temas • Interactivo</div>
+                <button class="home-btn" onclick="showSplash()" title="Volver a Inicio">Inicio</button>
+            </div>
+        </header>
+        
+        <nav class="side" aria-label="Navegación de secciones">
+            <ul class="nav-list">
+                <li><button class="nav-btn" data-target="que-es"><span class="num">1</span> ¿Qué es un Sistema Distribuido?</button></li>
+                <li><button class="nav-btn" data-target="objetivos"><span class="num">2</span> Objetivos</button></li>
+                <li><button class="nav-btn" data-target="caracteristicas"><span class="num">3</span> Características Principales</button></li>
+                <li><button class="nav-btn" data-target="componentes"><span class="num">4</span> Componentes Básicos</button></li>
+                <li><button class="nav-btn" data-target="tipos"><span class="num">5</span> Tipos de Sistemas Distribuidos</button></li>
+                <li><button class="nav-btn" data-target="seguridad"><span class="num">6</span> Seguridad</button></li>
+                <li><button class="nav-btn" data-target="escalabilidad"><span class="num">7</span> Escalabilidad</button></li>
+                <li><button class="nav-btn" data-target="pros-contras"><span class="num">8</span> Ventajas y Desventajas</button></li>
+                <li><button class="nav-btn" data-target="ejemplos"><span class="num">9</span> Ejemplos Reales</button></li>
+            </ul>
+        </nav>
+
+        <main>
+            <div class="content" id="contentContainer">
+                <article class="section" id="que-es">
+                    <div class="badge">1</div>
+                    <h2>¿Qué es un Sistema Distribuido?</h2>
+                    <div class="info">
+                        <p><strong>Definición sencilla:</strong> Un sistema distribuido es un conjunto de computadoras independientes (nodos) que colaboran mediante una red para ofrecer servicios como si fueran una sola entidad lógica.</p>
+                        <p><strong>Idea clave:</strong> Al usuario se le presenta un servicio unificado; internamente, el trabajo está repartido entre varios equipos que se coordinan y comparten recursos.</p>
+                        <p><strong>Analogía rápida:</strong> Un restaurante donde cada cocinero prepara un componente del plato: el cliente recibe un solo plato completo y no necesita saber quién hizo qué.</p>
+                        <p><strong>¿Por qué importa?</strong> Porque permite construir servicios más escalables, resistentes y cercanos al usuario (por ejemplo, replicando datos en varias regiones).</p>
+                        <p><strong>Resumen rápido:</strong> distribución = colaboración + red + transparencia para el usuario.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-que-es">
+                            <p>Pega aquí la URL del video de tu grupo (YouTube, Vimeo) o añade un enlace para la exposición.</p>
+                            <input id="video-que-es-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/lS9RwTkU5wQ?si=eq7DgOlxDIndTHJr">
+                            <div class="video-preview" id="video-que-es-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="section" id="objetivos">
+                    <div class="badge">2</div>
+                    <h2>Objetivos</h2>
+                    <div class="info">
+                        <p>Principales metas al diseñar sistemas distribuidos:</p>
+                        <ul>
+                            <li><strong>Compartir recursos:</strong> permitir acceso remoto a datos, dispositivos y servicios.</li>
+                            <li><strong>Rendimiento:</strong> paralelizar tareas y balancear carga para atender más usuarios.</li>
+                            <li><strong>Disponibilidad y resiliencia:</strong> reducir puntos únicos de fallo mediante redundancia.</li>
+                            <li><strong>Escalabilidad:</strong> crecer de forma controlada ante mayor demanda.</li>
+                            <li><strong>Economía:</strong> usar hardware commodity en vez de máquinas especiales costosas.</li>
+                            <li><strong>Experiencia unificada:</strong> abstraer la complejidad para los usuarios finales.</li>
+                        </ul>
+                        <p><strong>Resultado buscado:</strong> sistemas fiables, rápidos y fáciles de mantener a gran escala.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-objetivos">
+                            <p>Pega aquí la URL del video de tu grupo o el enlace a la grabación de la exposición.</p>
+                            <input id="video-objetivos-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/Z4_vyLECx4s?si=i_-cfNdUE6IXPp5Y">
+                            <div class="video-preview" id="video-objetivos-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="section" id="caracteristicas">
+                    <div class="badge">3</div>
+                    <h2>Características Principales</h2>
+                    <div class="info">
+                        <p>Propiedades clave que distinguen a los sistemas distribuidos:</p>
+                        <ul>
+                            <li><strong>Transparencia:</strong> la distribución está oculta al usuario (fallas, ubicación, replicación, etc.).</li>
+                            <li><strong>Escalabilidad:</strong> capacidad de crecer (vertical u horizontalmente) sin rediseño global.</li>
+                            <li><strong>Concurrencia:</strong> múltiples procesos o usuarios acceden y ejecutan operaciones simultáneas.</li>
+                            <li><strong>Tolerancia a fallos:</strong> el sistema sigue operativo cuando algunos nodos fallan (graceful degradation).</li>
+                            <li><strong>Heterogeneidad:</strong> integración de hardware, redes y sistemas operativos distintos.</li>
+                            <li><strong>Distribución geográfica:</strong> nodos ubicados en distintas regiones para baja latencia y resiliencia.</li>
+                            <li><strong>Compartición de recursos:</strong> servicios y datos accesibles por múltiples usuarios/nodos.</li>
+                        </ul>
+                        <p><strong>Nota:</strong> estas características generan trade-offs — por ejemplo, más replicación mejora disponibilidad pero complica la consistencia.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-caracteristicas">
+                            <p>Pega aquí la URL del video de tu grupo o un enlace a la presentación.</p>
+                            <input id="video-caracteristicas-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/KZyGMexofhk?si=u5uhJSrXROkwVzJI">
+                            <div class="video-preview" id="video-caracteristicas-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="section" id="componentes">
+                    <div class="badge">4</div>
+                    <h2>Componentes Básicos</h2>
+                    <div class="info">
+                        <p>Elementos que forman un sistema distribuido:</p>
+                        <ul>
+                            <li><strong>Nodos:</strong> servidores, clientes, sensores o cualquier equipo que participe.</li>
+                            <li><strong>Red:</strong> enlaces físicos y lógicos (LAN, WAN, Internet) que permiten comunicación.</li>
+                            <li><strong>Middleware:</strong> capa que abstrae complejidad: colas, brokers, registries, discovery services.</li>
+                            <li><strong>Servicios y APIs:</strong> microservicios, bases de datos distribuidas, caches, balanceadores.</li>
+                            <li><strong>Protocolos de comunicación:</strong> HTTP/REST, gRPC, TCP, UDP, mensajería (AMQP, MQTT).</li>
+                            <li><strong>Coordinación:</strong> servicios de consenso, relojes/líderes, lock managers.</li>
+                        </ul>
+                        <p><strong>Tip:</strong> documenta claramente los contratos (APIs) y las dependencias entre servicios para facilitar mantenimiento.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-componentes">
+                            <p>Pega aquí la URL del video de tu grupo o sube el enlace de la exposición sobre componentes.</p>
+                            <input id="video-componentes-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/-Ml4Xppsrvc?si=2rYWtoTROYo2KVPK">
+                            <div class="video-preview" id="video-componentes-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="section" id="tipos">
+                    <div class="badge">5</div>
+                    <h2>Tipos de Sistemas Distribuidos</h2>
+                    <div class="info">
+                        <p>Modelos arquitectónicos comunes:</p>
+                        <ul>
+                            <li><strong>Cliente-Servidor:</strong> clientes hacen peticiones y servidores responden (web, bases de datos).</li>
+                            <li><strong>P2P (Peer-to-Peer):</strong> nodos iguales que comparten responsabilidades (torrent, blockchain).</li>
+                            <li><strong>Clusters:</strong> máquinas agrupadas para cómputo o almacenamiento coordinado (HPC).</li>
+                            <li><strong>Grids:</strong> recursos distribuidos entre organizaciones para tareas compartidas.</li>
+                            <li><strong>Nube / Cloud:</strong> servicios gestionados en centros de datos, con elasticidad y multi-tenant.</li>
+                        </ul>
+                        <p><strong>Ejemplo práctico:</strong> una aplicación web típica usa arquitectura cliente-servidor + servicios distribuidos (microservicios) en la nube.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-tipos">
+                            <p>Pega aquí la URL del video de tu grupo o un enlace a la presentación sobre tipos de arquitecturas.</p>
+                            <input id="video-tipos-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/UeO7uIgMdx0?si=IUzl8r_52EdKigWX">
+                            <div class="video-preview" id="video-tipos-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+
+                <article class="section" id="seguridad">
+                    <div class="badge">6</div>
+                    <h2>Seguridad</h2>
+                    <div class="info">
+                        <p>Buenas prácticas para proteger sistemas distribuidos:</p>
+                        <ul>
+                            <li><strong>Cifrado (en tránsito y en reposo):</strong> TLS para conexiones y cifrado en disco para datos sensibles.</li>
+                            <li><strong>Autenticación y autorización:</strong> OAuth, JWT, RBAC/ABAC para controlar accesos.</li>
+                            <li><strong>Segmentación de red:</strong> firewalls, VPCs y políticas para aislar servicios.</li>
+                            <li><strong>Registro y monitoreo:</strong> logs centralizados, SIEM y alertas para detectar incidentes.</li>
+                            <li><strong>Backups y recuperación:</strong> estrategias de backup, snapshots y planes de DR (disaster recovery).</li>
+                            <li><strong>Pruebas de seguridad:</strong> pentesting y escaneos automáticos de dependencias.</li>
+                        </ul>
+                        <p><strong>Consejo:</strong> automatiza políticas de seguridad y revisiones para mantener postura segura a medida que el sistema crece.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-seguridad">
+                            <p>Pega aquí la URL del video de tu grupo sobre seguridad en sistemas distribuidos.</p>
+                            <input id="video-seguridad-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/YIk5UvbY-co?si=tK_gytMLmfW3znmg">
+                            <div class="video-preview" id="video-seguridad-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="section" id="escalabilidad">
+                    <div class="badge">7</div>
+                    <h2>Escalabilidad</h2>
+                    <div class="info">
+                        <p>Formas de escalar y consideraciones:</p>
+                        <ul>
+                            <li><strong>Escalabilidad vertical:</strong> aumentar recursos de una máquina (CPU, RAM). Fácil pero con límite.</li>
+                            <li><strong>Escalabilidad horizontal:</strong> añadir más instancias/nodos y balancear la carga. Mejor para alta disponibilidad.</li>
+                            <li><strong>Escalabilidad geográfica:</strong> replicar servicios en regiones cercanas a usuarios para reducir latencia.</li>
+                        </ul>
+                        <p><strong>Patrones útiles:</strong> particionado (sharding), caching, CQRS y balanceo de carga.</p>
+                        <p><strong>Advertencia:</strong> escalar horizontalmente requiere diseñar para la consistencia eventual y la tolerancia a fallos.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-escalabilidad">
+                            <p>Pega aquí la URL del video de tu grupo sobre estrategias de escalabilidad.</p>
+                            <input id="video-escalabilidad-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/VJ5ml9ujUX4?si=_X4whMdU8jLQ7jdr">
+                            <div class="video-preview" id="video-escalabilidad-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="section" id="pros-contras">
+                    <div class="badge">8</div>
+                    <h2>Ventajas y Desventajas</h2>
+                    <div class="info">
+                        <p><strong>Principales ventajas:</strong></p>
+                        <ul>
+                            <li>Rendimiento y paralelismo: dividir trabajo entre nodos.</li>
+                            <li>Alta disponibilidad: redundancia y replicación.</li>
+                            <li>Coste-efectividad: hardware commodity y escalado incremental.</li>
+                            <li>Flexibilidad: despliegue por regiones y modularidad.</li>
+                        </ul>
+                        <p><strong>Principales desventajas:</strong></p>
+                        <ul>
+                            <li>Mayor complejidad: depuración, despliegue y pruebas más difíciles.</li>
+                            <li>Consistencia y sincronización: trade-offs difíciles de gestionar.</li>
+                            <li>Supervisión y operaciones: necesidad de observabilidad avanzada (logs, métricas, traces).</li>
+                            <li>Costes ocultos: redes, replicación y operaciones pueden aumentar gastos.</li>
+                        </ul>
+                        <p><strong>Decisión de diseño:</strong> valora requisitos funcionales y no funcionales (latencia, consistencia, coste) antes de elegir arquitectura.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-pros-contras">
+                            <p>Pega aquí la URL del video de tu grupo sobre ventajas y desventajas.</p>
+                            <input id="video-pros-contras-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/q2CI2cZ0Oew?si=kJWNGEVIinrCgNMy">
+                            <div class="video-preview" id="video-pros-contras-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="section" id="ejemplos">
+                    <div class="badge">9</div>
+                    <h2>Ejemplos Reales</h2>
+                    <div class="info">
+                        <p>Algunos sistemas conocidos y cómo usan distribución:</p>
+                        <ul>
+                            <li><strong>Google:</strong> sistemas de almacenamiento y procesamiento masivo (BigTable, Spanner) con replicación global.</li>
+                            <li><strong>Amazon (AWS):</strong> servicios en la nube que replican y balancean para multitenancy y alta disponibilidad.</li>
+                            <li><strong>Netflix:</strong> microservicios, caching y CDN para streaming a gran escala.</li>
+                            <li><strong>WhatsApp:</strong> arquitectura orientada a mensajes con replicación y servers regionales.</li>
+                            <li><strong>Blockchain:</strong> red P2P descentralizada con consenso distribuido.</li>
+                            <li><strong>Kubernetes:</strong> orquestación de contenedores distribuida para gestionar cargas y escalado.</li>
+                            <li><strong>Videojuegos online:</strong> sincronización en tiempo real y arquitecturas híbridas (servidores regionales + P2P).</li>
+                        </ul>
+                        <p><strong>Lección:</strong> cada caso usa técnicas distintas (replicación, particionado, caché) según requisitos de latencia, costo y consistencia.</p>
+                    </div>
+                    <div class="video-area">
+                        <h3>Video del grupo</h3>
+                        <div class="video-placeholder" id="video-ejemplos">
+                            <p>Pega aquí la URL del video de tu grupo con ejemplos reales o la exposición grabada.</p>
+                            <input id="video-ejemplos-input" type="text" class="video-input" placeholder="URL del video (ej. https://...)" aria-label="URL del video del grupo" value="https://youtu.be/um8GTGfYXQ0?si=4KUFVTM5IJZSWaeZ">
+                            <div class="video-preview" id="video-ejemplos-preview" style="margin-top:10px"></div>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function openSection(id){
+            document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+            const el=document.getElementById(id);
+            if(el) el.classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.getAttribute('data-target')===id));
+            if(window.innerWidth<=960){
+                const rect = el.getBoundingClientRect();
+                window.scrollTo({top: window.scrollY + rect.top - 80, behavior: 'smooth'});
+            }
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+                const id=btn.getAttribute('data-target');
+                openSection(id);
+            });
+        });
+
+        document.querySelectorAll('.open-btn, .card[data-target]').forEach(el=>{
+            el.addEventListener('click', (e)=>{
+                const id = el.getAttribute('data-target') || e.currentTarget.getAttribute('data-target');
+                openSection(id);
+            });
+        });
+
+        document.addEventListener('keydown', (e)=>{
+            if(e.key==='Enter'){
+                const active = document.activeElement;
+                if(active && active.classList && (active.classList.contains('nav-btn') || active.classList.contains('open-btn'))){
+                    active.click();
+                }
+            }
+        });
+
+        function hideSplash(){
+            const s = document.getElementById('splashScreen');
+            const content = document.getElementById('contentContainer');
+            const nav = document.querySelector('nav.side');
+            if(s){
+                s.style.display = 'none';
+                s.setAttribute('aria-hidden','true');
+            }
+            if(content) content.removeAttribute('aria-hidden');
+            if(nav) nav.removeAttribute('aria-hidden');
+            document.body.style.overflow = '';
+        }
+
+        function showSplash(){
+            const s = document.getElementById('splashScreen');
+            const content = document.getElementById('contentContainer');
+            const nav = document.querySelector('nav.side');
+            if(s){
+                s.style.display = 'flex';
+                s.setAttribute('aria-hidden','false');
+            }
+            if(content) content.setAttribute('aria-hidden','true');
+            if(nav) nav.setAttribute('aria-hidden','true');
+            document.body.style.overflow = 'hidden';
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+
+        function makeEmbedHtml(url){
+            if(!url) return '';
+            const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+            if(ytMatch){
+                const id = ytMatch[1];
+                return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${id}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="max-width:100%;border-radius:8px"></iframe>`;
+            }
+            const vMatch = url.match(/vimeo\.com\/(\d+)/);
+            if(vMatch){
+                const id = vMatch[1];
+                return `<iframe src="https://player.vimeo.com/video/${id}" width="640" height="360" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="max-width:100%;border-radius:8px"></iframe>`;
+            }
+            return '';
+        }
+
+        function renderVideoPreview(inputEl){
+            if(!inputEl) return;
+            const val = inputEl.value && inputEl.value.trim();
+            const container = inputEl.parentElement.querySelector('.video-preview');
+            if(!container) return;
+            const embed = makeEmbedHtml(val);
+            if(embed){
+                container.innerHTML = embed;
+            } else if(val){
+                container.innerHTML = `<div style="padding:12px;border-radius:8px;background:#fff;color:#0b1220">URL detectada pero el formato no es YouTube/Vimeo o no es reconocible. Se mostrará como enlace: <a href="${val}" target="_blank" rel="noopener">Abrir enlace</a></div>`;
+            } else {
+                container.innerHTML = '';
+            }
+        }
+
+        function attachVideoInputs(){
+            document.querySelectorAll('.video-input').forEach(inp=>{
+                renderVideoPreview(inp);
+                let debounceTimer;
+                inp.addEventListener('input', ()=>{
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(()=>renderVideoPreview(inp), 300);
+                });
+                inp.addEventListener('change', ()=>renderVideoPreview(inp));
+                inp.addEventListener('paste', ()=>{
+                    setTimeout(()=>renderVideoPreview(inp), 50);
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', ()=>{
+            openSection('que-es');
+            attachVideoInputs();
+        });
+    </script>
+</body>
+</html>
